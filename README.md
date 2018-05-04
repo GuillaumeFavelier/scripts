@@ -60,7 +60,7 @@ of the environment variable `$ZSCRIPTS_CONFIG_FILE` to get the path of the file.
 
 It is **strongly** recommended to use the default path `$HOME/.zscripts.conf` to store user variables
 for consistency reasons. In fact, the access to an environment variable depends on where it has been
-defined, for example `cron` won't have access to a variable defined in `.zshrc`.
+defined, e.g. by default, `cron` won't have access to a variable defined in `.zshrc`.
 
 ToDo
 ----
