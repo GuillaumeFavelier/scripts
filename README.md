@@ -1,4 +1,6 @@
-This set of scripts is designed for linux Arch users.
+# `zscripts`
+
+**`zscripts`** is a set of `zsh` scripts designed for linux Arch users.
 
 Depending on the script you want to use, you must install some dependencies too:
 - update
