@@ -51,8 +51,11 @@ if you source this script from your `.zshrc` file like the following:
 
 - **screen**
 
-This script is designed to be sourced in the `.zshrc` configuration file. It is able to detect and load
-pre-configured GNU `screen` sessions.
+This script is designed to be sourced in the `.zshrc` configuration file like the following:
+
+`source $HOME/zscripts/screen.sh`
+
+It is able to detect and load pre-configured GNU `screen` sessions.
 
 - **lock**
 
