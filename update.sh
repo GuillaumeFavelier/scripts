@@ -44,9 +44,7 @@ then
       notify-send -u low 'System' 'Checking source packages...'
     fi
 
-    echo -n '' > $upd_logFile
-
-    if [ -f $upd_exludeFile ]
+    if [[ -z $upd_excludeFile && -f $upd_excludeFile ]]
     then
       for i in $(cat $upd_excludeFile)
       do
