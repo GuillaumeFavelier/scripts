@@ -7,13 +7,13 @@ scr_sessionPath=$HOME/.screen/sessions
 if [ -f $HOME/.zscripts.conf ]
 then
   source $HOME/.zscripts.conf
-elif [ -f $ZSCRIPTS_CONFIG_FILE ]
+elif [[ -z $ZSCRIPTS_CONFIG_FILE && -f $ZSCRIPTS_CONFIG_FILE ]]
 then
   source $ZSCRIPTS_CONFIG_FILE
 fi
 
 # detect if being sourced
-if [[ $_ != $0 ]] && [[ $_ != $SHELL ]]
+if [[ $_ != $0 && $_ != $SHELL ]]
 then
   # detect if gnu screen is used
   if [[ $TERM =~ 'screen' ]]

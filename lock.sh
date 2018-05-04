@@ -19,7 +19,7 @@ lck_finalImage='/tmp/screenshot_final.png'
 if [ -f $HOME/.zscripts.conf ]
 then
   source $HOME/.zscripts.conf
-elif [ -f $ZSCRIPTS_CONFIG_FILE ]
+elif [[ -z $ZSCRIPTS_CONFIG_FILE && -f $ZSCRIPTS_CONFIG_FILE ]]
 then
   source $ZSCRIPTS_CONFIG_FILE
 fi
@@ -31,7 +31,7 @@ fi
 
 scrot $lck_sourceImage
 convert $lck_sourceImage -blur 0x5 $lck_blurImage
-if [[ $lck_logoImage != "" ]] && [[ -f $lck_logoImage ]]
+if [[ -z $lck_logoImage && -f $lck_logoImage ]]
 then
   convert $lck_blurImage $lck_logoImage -gravity center -composite -matte $lck_finalImage
   i3lock -i $lck_finalImage

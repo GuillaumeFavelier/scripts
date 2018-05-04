@@ -24,12 +24,12 @@ upd_sourcePath=$HOME'/source'
 if [ -f $HOME/.zscripts.conf ]
 then
   source $HOME/.zscripts.conf
-elif [ -f $ZSCRIPTS_CONFIG_FILE ]
+elif [[ -z $ZSCRIPTS_CONFIG_FILE && -f $ZSCRIPTS_CONFIG_FILE ]]
 then
   source $ZSCRIPTS_CONFIG_FILE
 fi
 
-if [[ $# -gt '0' ]] && [[ $1 = '--scan' ]]
+if [[ $# -gt '0' && $1 = '--scan' ]]
 then
   ## Start update detection system ##
 
@@ -114,19 +114,19 @@ then
     done
 
     toNotify=$(wc -l $upd_logFile | cut -f1 -d \  )
-    if [[ $toNotify -gt '0' ]] && [[ $g_enableNotification = 'yes' ]]
+    if [[ $toNotify -gt '0' && $g_enableNotification = 'yes' ]]
     then
       notify-send -u normal 'System update' 'Custom Packages: '$packageList
     fi
 
     nbupdates=$(checkupdates | wc -l)
-    if [[ $nbupdates -gt '0' ]] && [[ $g_enableNotification = 'yes' ]]
+    if [[ $nbupdates -gt '0' && $g_enableNotification = 'yes' ]]
     then
       notify-send -u normal 'System update' 'Base packages: '$nbupdates
     fi
   else
     # detect if being sourced
-    if [[ $_ != $0 ]] && [[ $_ != $SHELL ]]
+    if [[ $_ != $0 && $_ != $SHELL ]]
     then
       ## Start auto-update system ##
       if [[ ! -f $upd_lockFile ]] && [[ -f $upd_logFile ]]
@@ -155,7 +155,7 @@ then
 
                 # project with CMakeLists.txt
                 name=${PWD##*/}
-                if [[ $name == 'source' ]] && [[ -f 'CMakeLists.txt' ]]
+                if [[ $name == 'source' && -f 'CMakeLists.txt' ]]
                 then
                   # move to build directory
                   cd ../build
