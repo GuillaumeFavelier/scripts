@@ -1,6 +1,6 @@
 # `zscripts`
 
-`zscripts` is a set of `zsh` scripts designed for linux Arch users.
+`zscripts` is a set of `zsh` scripts designed for Arch Linux users.
 
 Depending on the script you want to use, you must install some dependencies too:
 - update
@@ -50,7 +50,14 @@ if you source this script from your `.zshrc` file like the following:
 `source $HOME/zscripts/update.sh`
 
 - **screen**
+
+This script is designed to be sourced in the `.zshrc` configuration file. It is able to detect and load
+pre-configured GNU `screen` sessions.
+
 - **lock**
+
+This script lock the screen and use a blurred screenshot image as lockscreen image. An optional image
+(e.g. a logo) can be added at the center.
 
 User variables
 --------------
