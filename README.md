@@ -64,7 +64,5 @@ defined, e.g. by default, `cron` won't have access to a variable defined in `.zs
 
 ToDo
 ----
-- [x] basic scripts for auto-detection of updates with notifications
-- [x] clean the scripts and add configuration variables
 - [x] load user configuration file
 
