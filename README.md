@@ -36,7 +36,9 @@ and is able to check in particular Arch User Repositories (AUR) or other git ver
 system updates.
 
 You can add this script to a cron table and if the correct dependencies are installed, notifications
-will be sent. For example, to check for updates every hour:
+will be sent.
+
+For example, to check for updates every hour:
 
 `0 * * * * $HOME/zscripts/update.sh --scan`
 
