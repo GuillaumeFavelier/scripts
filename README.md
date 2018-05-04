@@ -1,6 +1,6 @@
 # `zscripts`
 
-**`zscripts`** is a set of `zsh` scripts designed for linux Arch users.
+`zscripts` is a set of `zsh` scripts designed for linux Arch users.
 
 Depending on the script you want to use, you must install some dependencies too:
 - update
@@ -43,7 +43,7 @@ will be sent. For example, to check for updates every hour:
 Notice the `--scan` argument which is sent to specify that you want to check for update.
 
 Optionally, an automatic installation procedure is applied as soon as updates are detected
-if you source this script from your .zshrc file like the following:
+if you source this script from your `.zshrc` file like the following:
 
 `source $HOME/zscripts/update.sh`
 
