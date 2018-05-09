@@ -2,20 +2,37 @@
 
 ## Configuration variables ##
 # allow the script to send notifications
-g_enableNotification='yes'
+if hash notify-send
+then
+    UPD_NOTIFICATIONS=true
+else
+    UPD_NOTIFICATIONS=false
+fi
 
 # duration of the lock in seconds
-upd_waitingTime='300'
+if [ -z $UPD_WAITINGTIME ]
+then
+    UPD_WAITINGTIME='300'
+fi
 
 # path to the lock file, during locking
 # no update installation will be done
-upd_lockFile='/tmp/auto_update.lock'
+if [ -z $UPD_LOCKFILE ]
+then
+    UPD_LOCKFILE='/tmp/auto_update.lock'
+fi
 
 # path to the update checking log
-upd_logFile='/tmp/auto_update.log'
+if [ -z $UPD_LOGFILE ]
+then
+    UPD_LOGFILE='/tmp/auto_update.log'
+fi
 
 # path to the source directory to check
-upd_sourcePath=$HOME'/source'
+if [ -z $UPD_SOURCEFILE ]
+then
+    UPD_SOURCEFILE=$HOME/.config/autoUpdateList
+fi
 
 # path to the file containing a list of
 # sources to exclude
@@ -34,7 +51,7 @@ then
   ## Start update detection system ##
 
   # make display available
-  if [ $g_enableNotification = 'yes' ]
+  if [ $UPD_NOTIFICATIONS ]
   then
     export DISPLAY=$(ps -u $(id -u) -o pid= | \
       while read pid; do
@@ -44,25 +61,24 @@ then
       notify-send -u low 'System' 'Checking source packages...'
     fi
 
-    if [[ -z $upd_excludeFile && -f $upd_excludeFile ]]
-    then
-      for i in $(cat $upd_excludeFile)
-      do
-        args+=$(echo -n '-I' $i' ')
-      done
-    fi
-
     packageList=''
 
-    # remove all fancy options on ls
-    ls_cmd='\ls '$upd_sourcePath' '$args
-    for i in $(eval $ls_cmd)
+    if [ ! -f $UPD_SOURCEFILE ]
+    then
+        echo "The UPD_SOURCEFILE: $UPD_SOURCEFILE does not exists"
+        exit 1
+    fi
+
+    for line in $(cat $UPD_SOURCEFILE)
     do
-      current=$upd_sourcePath/$i
+      current=$line
+      method=''
 
       echo $current
 
-      # move to the target directory
+      # This tricks allow to use environement variable in UPD_SOURCEFILE
+      # but represent a security breach as every line would be evaluated
+      current=`eval "echo $current"`
       cd $current
 
       if [ ! -d '.git' ]
@@ -70,7 +86,7 @@ then
         if [ -d 'source' ]
         then
           current=$current'/source'
-          cd $current
+          cd ./source
         else
           echo 'Error: neither a source directory or a git repository.'
           continue
@@ -98,7 +114,9 @@ then
       if [[ $ret = *"behind"* ]] && [[ $ret = *"fast-forward"* ]]
       then
         packageList+=$i' '
-        echo $current >> $upd_logFile
+        echo $current
+        echo $UPD_LOGFILE
+        echo $current >> $UPD_LOGFILE
       elif [ -f 'PKGBUILD' ]
       then
         pkgname=$(makepkg --printsrcinfo | grep 'pkgname =' | cut -f 2 -d =)
@@ -108,19 +126,19 @@ then
         if [ $? -ne '0' ]
         then
           packageList+=$i' '
-          echo $current >> $upd_logFile
+          echo $current >> $UPD_LOGFILE
         fi
       fi
     done
 
-    toNotify=$(wc -l $upd_logFile | cut -f1 -d \  )
-    if [[ $toNotify -gt '0' && $g_enableNotification = 'yes' ]]
+    toNotify=$(wc -l $UPD_LOGFILE | cut -f1 -d \  )
+    if [[ $toNotify -gt '0' && $UPD_NOTIFICATIONS ]]
     then
       notify-send -u normal 'System update' 'Custom Packages: '$packageList
     fi
 
     nbupdates=$(checkupdates | wc -l)
-    if [[ $nbupdates -gt '0' && $g_enableNotification = 'yes' ]]
+    if [[ $nbupdates -gt '0' && $UPD_NOTIFICATIONS  ]]
     then
       notify-send -u normal 'System update' 'Base packages: '$nbupdates
     fi
@@ -129,21 +147,21 @@ then
     if [[ $_ != $0 && $_ != $SHELL ]]
     then
       ## Start auto-update system ##
-      if [[ ! -f $upd_lockFile ]] && [[ -f $upd_logFile ]]
+      if [[ ! -f $UPD_LOCKFILE ]] && [[ -f $UPD_LOGFILE ]]
       then
-        packages=$(cat $upd_logFile 2> /dev/null)
-        numberOfUpdates=$(wc -l $upd_logFile 2> /dev/null | cut -f1 -d\ )
+        packages=$(cat $UPD_LOGFILE 2> /dev/null)
+        numberOfUpdates=$(wc -l $UPD_LOGFILE 2> /dev/null | cut -f1 -d\ )
         if [ $numberOfUpdates -ge 1 ]; then
           autoUpdateAnswer=""
           echo $packages
-          echo -n 'The packages above need to be updated, do you want to proceed? [y/n] : '
+          echo -n 'Package(s) above need to be updated, do you want to proceed? [y/n] : '
           read autoUpdateAnswer
           if [ $autoUpdateAnswer = 'y' ]
           then
             saved_dir=$(pwd)
 
-            for package in $(cat $upd_logFile); do
-              cd $package
+            for package in $(cat $UPD_LOGFILE); do
+              cd  $package
 
               # AUR build
               if [ -f 'PKGBUILD' ]; then
@@ -177,17 +195,17 @@ then
             cd $saved_dir
           elif [ $autoUpdateAnswer = 'n' ]
           then
-            touch $upd_lockFile
+            touch $UPD_LOCKFILE
 
-            if [ $g_enableNotification = 'yes']
+            if [ $UPD_NOTIFICATIONS ]
             then
-              notify-send -u low 'System' "packages auto-install delayed for $upd_waitingTime s."
+              notify-send -u low 'System' "packages auto-install delayed for $UPD_WAITINGTIME s."
             fi
-            (sleep $upd_waitingTime && rm -f $upd_lockFile 2> /dev/null)&
+            (sleep $UPD_WAITINGTIME && rm -f $UPD_LOCKFILE 2> /dev/null)&
           fi
         fi
 
-        echo -n '' > $upd_logFile
+        echo -n '' > $UPD_LOGFILE
       fi
     fi
   fi
