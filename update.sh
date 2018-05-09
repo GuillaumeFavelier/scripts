@@ -78,14 +78,15 @@ then
 
       # This tricks allow to use environement variable in UPD_SOURCEFILE
       # but represent a security breach as every line would be evaluated
-      cd `eval "echo $current"`
+      current=`eval "echo $current"`
+      cd $current
 
       if [ ! -d '.git' ]
       then
         if [ -d 'source' ]
         then
           current=$current'/source'
-          cd ` eval "echo $current"`
+          cd ./source
         else
           echo 'Error: neither a source directory or a git repository.'
           continue
@@ -160,7 +161,7 @@ then
             saved_dir=$(pwd)
 
             for package in $(cat $UPD_LOGFILE); do
-              cd `eval "echo $package"`
+              cd  $package
 
               # AUR build
               if [ -f 'PKGBUILD' ]; then
