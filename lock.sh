@@ -2,39 +2,53 @@
 
 ## Configuration variables ##
 # allow the script to send notifications
-g_enableNotification='yes'
+if hash notify-send
+then
+    LCK_NOTIFICATIONS=true
+else
+    LCK_NOTIFICATIONS=false
+fi
 
 # path to the screenshot image
-lck_sourceImage='/tmp/screenshot.png'
+if [ -z $LCK_SOURCE_IMAGE ]
+then
+  LCK_SOURCE_IMAGE='/tmp/screenshot.png'
+fi
 
 # path to the blurred image
-lck_blurImage='/tmp/screenshot_blur.png'
+if [ -z $LCK_BLUR_IMAGE ]
+then
+  LCK_BLUR_IMAGE='/tmp/screenshot_blur.png'
+fi
 
 # path to the final image
-lck_finalImage='/tmp/screenshot_final.png'
+if [ -z $LCK_FINAL_IMAGE ]
+then
+  LCK_FINAL_IMAGE='/tmp/screenshot_final.png'
+fi
 
 # additionnal image (e.g logo) centered on the final image
-#lck_logoImage=logo.png
+#LCK_LOGO_IMAGE=logo.png
 
 if [ -f $HOME/.zscripts.conf ]
 then
   source $HOME/.zscripts.conf
-elif [[ -z $ZSCRIPTS_CONFIG_FILE && -f $ZSCRIPTS_CONFIG_FILE ]]
+elif [[ ! -z $ZSCRIPTS_CONFIG_FILE && -f $ZSCRIPTS_CONFIG_FILE ]]
 then
   source $ZSCRIPTS_CONFIG_FILE
 fi
 
-if [ $g_enableNotification = 'yes' ]
+if [ $LCK_NOTIFICATIONS ]
 then
   notify-send -u low 'Locking the screen...'
 fi
 
-scrot $lck_sourceImage
-convert $lck_sourceImage -blur 0x5 $lck_blurImage
-if [[ -z $lck_logoImage && -f $lck_logoImage ]]
+scrot $LCK_SOURCE_IMAGE
+convert $LCK_SOURCE_IMAGE -blur 0x5 $LCK_BLUR_IMAGE
+if [[ ! -z $LCK_LOGO_IMAGE && -f $LCK_LOGO_IMAGE ]]
 then
-  convert $lck_blurImage $lck_logoImage -gravity center -composite -matte $lck_finalImage
-  i3lock -i $lck_finalImage
+  convert $LCK_BLUR_IMAGE $LCK_LOGO_IMAGE -gravity center -composite -matte $LCK_FINAL_IMAGE
+  i3lock -i $LCK_FINAL_IMAGE
 else
-  i3lock -i $lck_blurImage
+  i3lock -i $LCK_BLUR_IMAGE
 fi

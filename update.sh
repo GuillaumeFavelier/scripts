@@ -10,38 +10,34 @@ else
 fi
 
 # duration of the lock in seconds
-if [ -z $UPD_WAITINGTIME ]
+if [ -z $UPD_WAITING_TIME ]
 then
-    UPD_WAITINGTIME='300'
+    UPD_WAITING_TIME='300'
 fi
 
 # path to the lock file, during locking
 # no update installation will be done
-if [ -z $UPD_LOCKFILE ]
+if [ -z $UPD_LOCK_FILE ]
 then
-    UPD_LOCKFILE='/tmp/auto_update.lock'
+    UPD_LOCK_FILE='/tmp/auto_update.lock'
 fi
 
 # path to the update checking log
-if [ -z $UPD_LOGFILE ]
+if [ -z $UPD_LOG_FILE ]
 then
-    UPD_LOGFILE='/tmp/auto_update.log'
+    UPD_LOG_FILE='/tmp/auto_update.log'
 fi
 
-# path to the source directory to check
-if [ -z $UPD_SOURCEFILE ]
+# path to the source file to check
+if [ -z $UPD_SOURCE_FILE ]
 then
-    UPD_SOURCEFILE=$HOME/.config/autoUpdateList
+    UPD_SOURCE_FILE=$HOME/.config/autoUpdateList
 fi
-
-# path to the file containing a list of
-# sources to exclude
-#upd_excludeFile=$HOME'/.exclude'
 
 if [ -f $HOME/.zscripts.conf ]
 then
   source $HOME/.zscripts.conf
-elif [[ -z $ZSCRIPTS_CONFIG_FILE && -f $ZSCRIPTS_CONFIG_FILE ]]
+elif [[ ! -z $ZSCRIPTS_CONFIG_FILE && -f $ZSCRIPTS_CONFIG_FILE ]]
 then
   source $ZSCRIPTS_CONFIG_FILE
 fi
@@ -49,6 +45,7 @@ fi
 if [[ $# -gt '0' && $1 = '--scan' ]]
 then
   ## Start update detection system ##
+  touch $UPD_LOG_FILE
 
   # make display available
   if [ $UPD_NOTIFICATIONS ]
@@ -63,23 +60,25 @@ then
 
     packageList=''
 
-    if [ ! -f $UPD_SOURCEFILE ]
+    if [ ! -f $UPD_SOURCE_FILE ]
     then
-        echo "The UPD_SOURCEFILE: $UPD_SOURCEFILE does not exists"
+        echo "The UPD_SOURCE_FILE: $UPD_SOURCE_FILE does not exists"
         exit 1
     fi
 
-    for line in $(cat $UPD_SOURCEFILE)
+    for line in $(cat $UPD_SOURCE_FILE)
     do
       current=$line
       method=''
 
       echo $current
 
-      # This tricks allow to use environement variable in UPD_SOURCEFILE
+      # This tricks allow to use environement variable in UPD_SOURCE_FILE
       # but represent a security breach as every line would be evaluated
       current=`eval "echo $current"`
       cd $current
+
+      packageName=${PWD##*/}
 
       if [ ! -d '.git' ]
       then
@@ -113,10 +112,8 @@ then
 
       if [[ $ret = *"behind"* ]] && [[ $ret = *"fast-forward"* ]]
       then
-        packageList+=$i' '
-        echo $current
-        echo $UPD_LOGFILE
-        echo $current >> $UPD_LOGFILE
+        packageList+=$packageName' '
+        echo $current >> $UPD_LOG_FILE
       elif [ -f 'PKGBUILD' ]
       then
         pkgname=$(makepkg --printsrcinfo | grep 'pkgname =' | cut -f 2 -d =)
@@ -125,13 +122,13 @@ then
         ret=$(pacman -Q ${pkgname/ /})
         if [ $? -ne '0' ]
         then
-          packageList+=$i' '
-          echo $current >> $UPD_LOGFILE
+          packageList+=$packageName' '
+          echo $current >> $UPD_LOG_FILE
         fi
       fi
     done
 
-    toNotify=$(wc -l $UPD_LOGFILE | cut -f1 -d \  )
+    toNotify=$(wc -l $UPD_LOG_FILE | cut -f1 -d \  )
     if [[ $toNotify -gt '0' && $UPD_NOTIFICATIONS ]]
     then
       notify-send -u normal 'System update' 'Custom Packages: '$packageList
@@ -147,10 +144,10 @@ then
     if [[ $_ != $0 && $_ != $SHELL ]]
     then
       ## Start auto-update system ##
-      if [[ ! -f $UPD_LOCKFILE ]] && [[ -f $UPD_LOGFILE ]]
+      if [[ ! -f $UPD_LOCK_FILE && -f $UPD_LOG_FILE ]]
       then
-        packages=$(cat $UPD_LOGFILE 2> /dev/null)
-        numberOfUpdates=$(wc -l $UPD_LOGFILE 2> /dev/null | cut -f1 -d\ )
+        packages=$(cat $UPD_LOG_FILE 2> /dev/null)
+        numberOfUpdates=$(wc -l $UPD_LOG_FILE 2> /dev/null | cut -f1 -d\ )
         if [ $numberOfUpdates -ge 1 ]; then
           autoUpdateAnswer=""
           echo $packages
@@ -160,7 +157,7 @@ then
           then
             saved_dir=$(pwd)
 
-            for package in $(cat $UPD_LOGFILE); do
+            for package in $(cat $UPD_LOG_FILE); do
               cd  $package
 
               # AUR build
@@ -195,17 +192,17 @@ then
             cd $saved_dir
           elif [ $autoUpdateAnswer = 'n' ]
           then
-            touch $UPD_LOCKFILE
+            touch $UPD_LOCK_FILE
 
             if [ $UPD_NOTIFICATIONS ]
             then
-              notify-send -u low 'System' "packages auto-install delayed for $UPD_WAITINGTIME s."
+              notify-send -u low 'System' "packages auto-install delayed for $UPD_WAITING_TIME s."
             fi
-            (sleep $UPD_WAITINGTIME && rm -f $UPD_LOCKFILE 2> /dev/null)&
+            (sleep $UPD_WAITING_TIME && rm -f $UPD_LOCK_FILE 2> /dev/null)&
           fi
         fi
 
-        echo -n '' > $UPD_LOGFILE
+        echo -n '' > $UPD_LOG_FILE
       fi
     fi
   fi

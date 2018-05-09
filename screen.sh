@@ -2,12 +2,15 @@
 
 ## Configuration variables ##
 # store the screen sessions in here
-scr_sessionPath=$HOME/.screen/sessions
+if [ -z $SCR_SESSION_PATH ]
+then
+  SCR_SESSION_PATH=$HOME/.screen/sessions
+fi
 
 if [ -f $HOME/.zscripts.conf ]
 then
   source $HOME/.zscripts.conf
-elif [[ -z $ZSCRIPTS_CONFIG_FILE && -f $ZSCRIPTS_CONFIG_FILE ]]
+elif [[ ! -z $ZSCRIPTS_CONFIG_FILE && -f $ZSCRIPTS_CONFIG_FILE ]]
 then
   source $ZSCRIPTS_CONFIG_FILE
 fi
@@ -20,9 +23,9 @@ then
   then
     screenParsedFile=${STY#[0-9]*.}
 
-    if [ -d $scr_sessionPath ]
+    if [ -d $SCR_SESSION_PATH ]
     then
-      screenSessionFile=$scr_sessionPath/$screenParsedFile
+      screenSessionFile=$SCR_SESSION_PATH/$screenParsedFile
       if [ -f $screenSessionFile ]
       then
         if [ ! -f /tmp/$STY ]
