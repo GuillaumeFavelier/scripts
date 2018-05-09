@@ -10,17 +10,29 @@ else
 fi
 
 # duration of the lock in seconds
-UPD_WAITINGTIME='300'
+if [ -z $UPD_WAITINGTIME ]
+then
+    UPD_WAITINGTIME='300'
+fi
 
 # path to the lock file, during locking
 # no update installation will be done
-UPD_LOCKFILE='/tmp/auto_update.lock'
+if [ -z $UPD_LOCKFILE ]
+then
+    UPD_LOCKFILE='/tmp/auto_update.lock'
+fi
 
 # path to the update checking log
-UPD_LOGFILE='/tmp/auto_update.log'
+if [ -z $UPD_LOGFILE ]
+then
+    UPD_LOGFILE='/tmp/auto_update.log'
+fi
 
 # path to the source directory to check
-UPD_SOURCEFILE=$HOME/.config/autoUpdateList
+if [ -z $UPD_SOURCEFILE ]
+then
+    UPD_SOURCEFILE=$HOME/.config/autoUpdateList
+fi
 
 # path to the file containing a list of
 # sources to exclude
@@ -101,6 +113,8 @@ then
       if [[ $ret = *"behind"* ]] && [[ $ret = *"fast-forward"* ]]
       then
         packageList+=$i' '
+        echo $current
+        echo $UPD_LOGFILE
         echo $current >> $UPD_LOGFILE
       elif [ -f 'PKGBUILD' ]
       then
