@@ -79,5 +79,5 @@ defined, e.g. by default, `cron` won't have access to a variable defined in `.zs
 ToDo
 ----
 - [x] [update] load user configuration file
-- [ ] [update] avoid redundant package updates
+- [x] [update] avoid redundant package updates
 

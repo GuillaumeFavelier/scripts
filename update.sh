@@ -42,10 +42,12 @@ then
   source $ZSCRIPTS_CONFIG_FILE
 fi
 
+  ## Start update detection system ##
 if [[ $# -gt '0' && $1 = '--scan' ]]
 then
-  ## Start update detection system ##
-  touch $UPD_LOG_FILE
+  # the script is going to scan for new
+  # packages so we empty the log list
+  cat /dev/null > $UPD_LOG_FILE
 
   # make display available
   if [ $UPD_NOTIFICATIONS ]
