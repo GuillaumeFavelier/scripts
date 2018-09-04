@@ -70,15 +70,19 @@ then
 
     for line in $(cat $UPD_SOURCE_FILE)
     do
-      current=$line
-      method=''
+      source_dir=${line%\#*}
+      method='master'
+      if [[ ${line} = *"#"* ]]
+      then
+          method=${line#*\#}
+      fi
 
-      echo $current
+      echo "source: $source_dir, method: $method"
 
       # This tricks allow to use environement variable in UPD_SOURCE_FILE
       # but represent a security breach as every line would be evaluated
-      current=`eval "echo $current"`
-      cd $current
+      source_dir=`eval "echo $source_dir"`
+      cd $source_dir
 
       packageName=${PWD##*/}
 
@@ -86,7 +90,7 @@ then
       then
         if [ -d 'source' ]
         then
-          current=$current'/source'
+          source_dir=$source_dir'/source'
           cd ./source
         else
           echo 'Error: neither a source directory or a git repository.'
@@ -102,33 +106,52 @@ then
         continue
       fi
 
-      ret=$(git rev-parse --abbrev-ref HEAD)
-      if [ $ret != 'master' ]
-      then
-        echo 'Error: not on master.'
-        continue
-      fi
-
       # check if updates available
-      ret=$(git status -uno)
-
-      if [[ $ret = *"behind"* ]] && [[ $ret = *"fast-forward"* ]]
+      if [[ $method = "master" || $method = "branch" ]]
       then
-        packageList+=$packageName' '
-        echo $current >> $UPD_LOG_FILE
-      elif [ -f 'PKGBUILD' ]
-      then
-        pkgname=$(makepkg --printsrcinfo | grep 'pkgname =' | cut -f 2 -d =)
+          # master sentinel
+          ret=$(git rev-parse --abbrev-ref HEAD)
+          if [[ $method = "master" && $ret != 'master' ]]
+          then
+              echo 'Error: not on master.'
+              continue
+          fi
 
-        # AUR: updated but check if installed
-        ret=$(pacman -Q ${pkgname/ /})
-        if [ $? -ne '0' ]
-        then
-          packageList+=$packageName' '
-          echo $current >> $UPD_LOG_FILE
-        fi
+          ret=$(git status -uno)
+          if [[ $ret = *"behind"* && $ret = *"fast-forward"* ]]
+          then
+              packageList+=$packageName' '
+              echo $source_dir#$method >> $UPD_LOG_FILE
+          fi
+      elif [[ $method = "tag" ]]
+      then
+          lastTag=$(git describe --tags `git rev-list --tags --max-count=1`)
+          curTag=$(git describe --tags)
+          if [[ $lastTag != $curTag ]]
+          then
+              packageList+=$packageName' '
+              echo $source_dir#$method >> $UPD_LOG_FILE
+          fi
+      elif [[ $method = "aur" || -f 'PKGBUILD' ]] # aur repo are automatically detected
+      then
+          if [ -f 'PKGBUILD' ]
+          then
+              pkgname=$(makepkg --printsrcinfo | grep 'pkgname =' | cut -f 2 -d =)
+              # force method to be aur if detected
+              method="aur"
+
+              # AUR: updated but check if installed
+              ret=$(pacman -Q ${pkgname/ /})
+              if [ $? -ne '0' ]
+              then
+                  packageList+=$packageName' '
+                  echo $source_dir#$method >> $UPD_LOG_FILE
+              fi
+          else
+              echo "Error: No PKGBUILD file in an aur repository"
+          fi
       fi
-    done
+  done
 
     toNotify=$(wc -l $UPD_LOG_FILE | cut -f1 -d \  )
     if [[ $toNotify -gt '0' && $UPD_NOTIFICATIONS ]]
@@ -159,23 +182,45 @@ then
           then
             saved_dir=$(pwd)
 
-            for package in $(cat $UPD_LOG_FILE); do
+            for line in $(cat $UPD_LOG_FILE); do
+              package=${line%\#*}
+              method='master'
+              if [[ ${line} = *"#"* ]]
+              then
+                method=${line#*\#}
+              fi
+
               cd  $package
 
               # AUR build
-              if [ -f 'PKGBUILD' ]; then
+              if [[ $method = "aur" || -f 'PKGBUILD' ]]; then
                 git pull origin master
                 makepkg -si
               else
-                git pull
+                if [[ $method == "tag" ]]
+                then
+                    lastTag=$(git describe --tags `git rev-list --tags --max-count=1`)
+                    git checkout $lastTag
+                else
+                    git pull
+                fi
                 git submodule update --init
 
                 # project with CMakeLists.txt
-                name=${PWD##*/}
-                if [[ $name == 'source' && -f 'CMakeLists.txt' ]]
+                if [[ -f 'CMakeLists.txt' ]]
                 then
+                  if [[ -d 'build'  ]]
+                  then
+                      buildDir='./build'
+                  elif [[ -d '../build' ]]
+                  then
+                      buildDir='../build'
+                  else
+                      echo "build dir not found"
+                      continue
+                  fi
                   # move to build directory
-                  cd ../build
+                  cd $buildDir
 
                   # build with ninja
                   if [ -f 'build.ninja' ]
