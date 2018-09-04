@@ -6,7 +6,7 @@ Depending on the script you want to use, you must install some dependencies too:
 - *update.sh*:
     * cronie    [optional]
     * dunst     [optional]
-    * libnotify [optinal]
+    * libnotify [optional]
 
 - *screen.sh*:
     * screen
@@ -57,20 +57,11 @@ the *lib_release/* will be updated only on new tagged version.
 
 ### Use
 
-This script work in two steps, first it check for update without touching any folder.
+This script check for update without touching any folder.
 This allows the check for update to run in the background, like in a cron tab.
 Here is an example of a cron to check for updates every hour:
 
-`0 * * * * $HOME/zscripts/update.sh --scan`
-
-Notice the `--scan` argument which is sent to specify that you want to check for update.
-
-Then, to process to the update, you need to source the `update.sh` file.
-
-`source $HOME/zscripts/update.sh`
-
-If you add this line in your `.zshrc`, your shell will propose to update (if
-needed) whenever you open it.
+`0 * * * * $HOME/zscripts/update.sh`
 
 ## Screen
 
