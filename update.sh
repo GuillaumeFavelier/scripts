@@ -23,13 +23,14 @@ then
   source $ZSCRIPTS_CONFIG_FILE
 fi
 
+
 # make display available
 if [ $UPD_NOTIFICATIONS ]
 then
-  export DISPLAY=$(ps -u $(id -u) -o pid= | \
-    while read pid; do
-    cat /proc/$pid/environ 2>/dev/null | tr '\0' '\n' | grep '^DISPLAY=:'
-  done | grep -o ':[0-9]*' | sort -u)
+  DBUS_SESSION_BUS_ADDRESS=$(ps -u $(id -u) -o pid= | while read pid; do
+    cat /proc/$pid/environ 2>/dev/null | tr '\0' '\n' | grep '^DBUS_SESSION_BUS_ADDRESS';
+  done | sort -u | grep user | grep -v ,)
+  export DBUS_SESSION_BUS_ADDRESS=${DBUS_SESSION_BUS_ADDRESS#*=}
 
   notify-send -u low 'System' 'Checking source packages...'
 fi
